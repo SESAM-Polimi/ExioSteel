@@ -1,0 +1,13 @@
+name: ExioSteel
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10.14
+  - pip=24.2
+  - pip:
+      - pint==0.24.3
+      - numpy==1.24.1
+
+prefix: /opt/anaconda3/envs/ExioSteel
+
