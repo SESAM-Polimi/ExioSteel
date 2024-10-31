@@ -5,7 +5,7 @@ import os
 
 user = 'LR'
 
-with open('paths.yml', 'r') as file:
+with open('support/paths.yml', 'r') as file:
     paths = yaml.safe_load(file)
 
 onedrive_folder = paths['onedrive_folder'][user]
@@ -31,4 +31,6 @@ db.read_inventories(master_file_path,check_errors=False)
 #%%
 db.add_inventories('excel')
 
+# %%
+db.sut.u.loc[:,('CN','Activity',db.new_activities)].sum(0)
 # %%
