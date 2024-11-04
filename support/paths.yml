@@ -8,8 +8,8 @@ git_folder:
 database:
   exiobase:
     raw: 'DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase Hybrid 3.3.18 with VA/flows'
-    aggregated: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel'
-    extended: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel'
+    aggregated: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Raw_aggregated'
+    extended: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended'
   ember: 'DENG-SESAM - Documenti/c-Research/a-Datasets/EMBER/yearly_full_release_long_format.csv'
 
 

@@ -9,8 +9,6 @@ with open('support/paths.yml', 'r') as file:
     paths = yaml.safe_load(file)
 
 onedrive_folder = paths['onedrive_folder'][user]
-# git_folder = paths['git_folder'][user]
-
 master_file_path = os.path.join('support/add_sectors/steelmaking_routes.xlsx')
 
 #%%
@@ -59,4 +57,8 @@ f.set_index(['Region','Activity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
 f.to_clipboard()
+
+# %% Export aggregated database to txt
+db.to_txt(os.path.join(onedrive_folder,paths['database']['exiobase']['extended']))
+
 # %%
