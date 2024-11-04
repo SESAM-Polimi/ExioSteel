@@ -9,9 +9,9 @@ with open('support/paths.yml', 'r') as file:
     paths = yaml.safe_load(file)
 
 onedrive_folder = paths['onedrive_folder'][user]
-git_folder = paths['git_folder'][user]
+# git_folder = paths['git_folder'][user]
 
-master_file_path = os.path.join(git_folder,'support/add_sectors/master.xlsx')
+master_file_path = os.path.join('support/add_sectors/steelmaking_routes.xlsx')
 
 #%%
 db = mario.parse_from_txt(
