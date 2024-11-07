@@ -12,9 +12,9 @@ onedrive_folder = paths['onedrive_folder'][user]
 master_file_path = os.path.join('support/add_sectors/steelmaking_routes.xlsx')
 
 #%%
-db = mario.parse_exiobase(
-    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase Hybrid 3.3.18',
-    unit='Hybrid',
+db = mario.parse_from_txt(
+    path=os.path.join(onedrive_folder,paths['database']['exiobase']['aggregated'],'flows'),
+    mode='flows',
     table='SUT',
 )
 
