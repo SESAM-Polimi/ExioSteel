@@ -3,6 +3,7 @@ import mario
 import yaml
 import os 
 from ember_remapping import map_ember_to_classification
+import pandas as pd
 
 user = 'LR'
 
@@ -29,7 +30,6 @@ db.aggregate(
     )
 
 #%% Update electricity mixes
-
 # Parse ember electricity generation data, map to exiobase and get electricity mix for a given year 
 ee_mix = map_ember_to_classification(
     path = os.path.join(folder,paths['database']['ember']),
@@ -38,15 +38,54 @@ ee_mix = map_ember_to_classification(
     mode = 'mix',
 )
 
-# implement changes in matrices
+#%% Map ember electricity generation data to aggregated exiobase electricity commodities
+ee_tech_map = {
+    'Electricity, fossil': ['Coal', 'Gas', 'Other Fossil'],
+    'Electricity, nuclear': ['Nuclear'],
+    'Electricity, renewable': ['Bioenergy','Hydro','Other Renewables','Solar','Wind'],
+}
+
+#%% Implement changes in matrices
 z = db.z
 s = db.s
 
 for region in db.get_index('Region'):
     print(region,end=' ')
-    new_mix = ee_mix.loc[(region,slice(None),slice(None)),'Value'].to_frame().sort_index(axis=0) 
-    new_mix.index = new_mix.index.get_level_values(2)
-    s.loc[(region, 'Activity', new_mix.index),(region,'Commodity','Electricity')] = new_mix.values  # check if commodity electricity is called "Electricity" in aggregation excel file
+    for ee_com, ee_techs in ee_tech_map.items():        
+        
+        new_mix = pd.DataFrame()
+        for tech in ee_techs:
+            try:
+                df = ee_mix.loc[(region,slice(None),tech),'Value'].to_frame().sort_index(axis=0)
+                new_mix = pd.concat([new_mix,df], axis=0)
+            except:
+                print(f'{tech} not found in ember data for {region}')
+                continue
+
+        if new_mix.empty:
+            print(f'No data found for {ee_com} in {region}')
+            continue
+        
+        else:
+            new_mix /= new_mix.sum()
+
+            old_market_share = s.loc[(region, 'Activity', ee_techs),(region,'Commodity',ee_com)].sum().sum()
+            new_market_share = new_mix.values * old_market_share # multipliy by old_market_share to account also for electricity from other activities as by-products
+
+            new_market_share_index = pd.MultiIndex.from_arrays([
+                [region]*len(new_market_share),
+                ['Activity']*len(new_market_share),
+                list(new_mix.index.get_level_values(2)),
+            ])
+            new_market_share_columns = pd.MultiIndex.from_arrays([
+                [region],
+                ['Commodity'],
+                [ee_com],
+            ])
+
+            new_market_share = pd.DataFrame(new_market_share, index=new_market_share_index, columns=new_market_share_columns)
+            s.loc[new_market_share.index,new_market_share.columns] = new_market_share.values
+
     print('done')
 
 z.update(s)
@@ -57,7 +96,7 @@ db.reset_to_coefficients('baseline')
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
 
 # Adding two new activities to the database to represent the production of "Blast furnace gas" and "Oxygen steel furnace gas"
-master_file_path = 'add_sectors/blastfurnacegas.xlsx'
+master_file_path = os.path.join(folder,paths['inventories'],'blastfurnacegas.xlsx')
 db.read_add_sectors_excel(master_file_path,read_inventories=True)
 db.add_sectors()
 
@@ -116,7 +155,6 @@ f.set_index(['Region','Activity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
 f.to_clipboard()
-
 
 # %% Export aggregated database to txt
 db.to_txt(os.path.join(folder,paths['database']['exiobase']['aggregated'])) 

@@ -1,9 +1,7 @@
 onedrive_folder: 
   LR: '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/'
   DG: ''
-git_folder:
-  LR: '/Users/lorenzorinaldi/Documents/GitHub/SESAM/ExioSteel'
-  DG: ''
+
 
 database:
   exiobase:
@@ -12,4 +10,4 @@ database:
     extended: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended'
   ember: 'DENG-SESAM - Documenti/c-Research/a-Datasets/EMBER/yearly_full_release_long_format.csv'
 
-
+inventories: 'DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Inventories'
