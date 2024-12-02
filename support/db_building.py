@@ -4,6 +4,10 @@ import yaml
 import os 
 from ember_remapping import map_ember_to_classification
 import pandas as pd
+import time
+import warnings
+
+warnings.filterwarnings("ignore")
 
 user = 'LR'
 
@@ -38,64 +42,48 @@ ee_mix = map_ember_to_classification(
     mode = 'mix',
 )
 
-#%% Map ember electricity generation data to aggregated exiobase electricity commodities
-# ee_tech_map = {
-#     'Electricity, fossil': ['Coal', 'Gas', 'Other Fossil'],
-#     'Electricity, nuclear': ['Nuclear'],
-#     'Electricity, renewable': ['Bioenergy','Hydro','Other Renewables','Solar','Wind'],
-# }
-
-ee_tech_map = {
-    'Electricity': ['Coal', 'Gas', 'Other Fossil','Nuclear','Bioenergy','Hydro','Other Renewables','Solar','Wind'],
-}
-
-#%% Implement changes in matrices
+#%% Change electricity mix from the use side, keeping all techs disaggregated
 z = db.z
-s = db.s
+u = db.u
+Y = db.Y
 
-for region in db.get_index('Region'):
-    print(region,end=' ')
-    for ee_com, ee_techs in ee_tech_map.items():        
-        
-        new_mix = pd.DataFrame()
-        for tech in ee_techs:
-            try:
-                df = ee_mix.loc[(region,slice(None),tech),'Value'].to_frame().sort_index(axis=0)
-                new_mix = pd.concat([new_mix,df], axis=0)
-            except:
-                print(f'{tech} not found in ember data for {region}')
-                continue
+ee_com = ['Coal', 'Gas', 'Other Fossil','Nuclear','Bioenergy','Hydro','Other Renewables','Solar','Wind']
 
-        if new_mix.empty:
-            print(f'No data found for {ee_com} in {region}')
-            continue
-        
-        else:
-            new_mix /= new_mix.sum()
+for region_from in db.get_index('Region'):
+    start = time.time()
+    print(region_from,end=' ')
 
-            old_market_share = s.loc[(region, 'Activity', ee_techs),(region,'Commodity',ee_com)].sum().sum()
-            new_market_share = new_mix.values * old_market_share # multipliy by old_market_share to account also for electricity from other activities as by-products
+    u_ee = u.loc[(region_from,slice(None),ee_com),:]
+    u_index = u_ee.index
+    u_ee = u_ee.sum(0).to_frame().T.values
 
-            new_market_share_index = pd.MultiIndex.from_arrays([
-                [region]*len(new_market_share),
-                ['Activity']*len(new_market_share),
-                list(new_mix.index.get_level_values(2)),
-            ])
-            new_market_share_columns = pd.MultiIndex.from_arrays([
-                [region],
-                ['Commodity'],
-                [ee_com],
-            ])
+    Y_ee = Y.loc[(region_from,slice(None),ee_com),:].sum(0).to_frame().T.values
 
-            new_market_share = pd.DataFrame(new_market_share, index=new_market_share_index, columns=new_market_share_columns)
-            s.loc[new_market_share.index,new_market_share.columns] = new_market_share.values
+    ember_ee_mix = ee_mix.loc[(region_from,slice(None),ee_com),'Value'].to_frame()
+    ember_ee_mix.index = pd.MultiIndex.from_arrays([
+        [region_from]*ember_ee_mix.shape[0],
+        ['Commodity']*ember_ee_mix.shape[0],
+        ember_ee_mix.index.get_level_values(-1)
+    ],names=["Region","Level","Item"])
 
-    print('done')
+    region_ee_mix = pd.DataFrame(0,index = u_index, columns = ['Value'])
+    region_ee_mix.update(ember_ee_mix)
+    region_ee_mix = region_ee_mix.values
 
-z.update(s)
+    new_u_ee = pd.DataFrame(region_ee_mix @ u_ee, index=u_index, columns=u.columns)
+    new_Y_ee = pd.DataFrame(region_ee_mix @ Y_ee, index=u_index, columns=Y.columns)
 
+    u.update(new_u_ee)
+    Y.update(new_Y_ee)
+    print('done in {:.2f} s'.format(time.time()-start))
+
+z.update(u)
 db.update_scenarios('baseline',z=z)
 db.reset_to_coefficients('baseline')
+
+
+#%% check electricity mix
+db.z.loc[('IT','Commodity',ee_com),:]/db.u.loc[('IT','Commodity',ee_com),:].sum(0)
 
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
 
