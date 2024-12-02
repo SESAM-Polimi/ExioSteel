@@ -65,12 +65,6 @@ steel_acts = [
     'BF-BOF-BECCSmax',
     'BF-BOF-BECCSmin',
     'Re-processing of secondary steel into new steel',
-    'Steel production through 100%H2-DR',
-    'Steel production with H2 inj to BF',
-    'Steel production with charcoal inj to BF',
-    'Steel production with charcoal inj to BF + CCUS',
-    'Steel production through NG-DR',
-    'Steel production BF-BOF + CCUS',
     ]
 
 #%%
