@@ -39,10 +39,14 @@ ee_mix = map_ember_to_classification(
 )
 
 #%% Map ember electricity generation data to aggregated exiobase electricity commodities
+# ee_tech_map = {
+#     'Electricity, fossil': ['Coal', 'Gas', 'Other Fossil'],
+#     'Electricity, nuclear': ['Nuclear'],
+#     'Electricity, renewable': ['Bioenergy','Hydro','Other Renewables','Solar','Wind'],
+# }
+
 ee_tech_map = {
-    'Electricity, fossil': ['Coal', 'Gas', 'Other Fossil'],
-    'Electricity, nuclear': ['Nuclear'],
-    'Electricity, renewable': ['Bioenergy','Hydro','Other Renewables','Solar','Wind'],
+    'Electricity': ['Coal', 'Gas', 'Other Fossil','Nuclear','Bioenergy','Hydro','Other Renewables','Solar','Wind'],
 }
 
 #%% Implement changes in matrices

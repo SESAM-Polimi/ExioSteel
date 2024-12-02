@@ -8,7 +8,7 @@ with open('support/paths.yml', 'r') as file:
     paths = yaml.safe_load(file)
 
 onedrive_folder = paths['onedrive_folder'][user]
-master_file_path = os.path.join('support/add_sectors/steelmaking_routes.xlsx')
+master_file_path = os.path.join(onedrive_folder,paths['inventories'],'steelmaking_routes.xlsx')
 
 #%%
 db = mario.parse_from_txt(
@@ -28,6 +28,9 @@ db.read_add_sectors_excel(master_file_path,read_inventories=True)
 
 #%%
 db.add_sectors()
+
+# %% Export aggregated database to txt
+db.to_txt(os.path.join(onedrive_folder,paths['database']['exiobase']['extended']))
 
 # %%
 ghgs = {
@@ -62,9 +65,15 @@ steel_acts = [
     'BF-BOF-BECCSmax',
     'BF-BOF-BECCSmin',
     'Re-processing of secondary steel into new steel',
+    'Steel production through 100%H2-DR',
+    'Steel production with H2 inj to BF',
+    'Steel production with charcoal inj to BF',
+    'Steel production with charcoal inj to BF + CCUS',
+    'Steel production through NG-DR',
+    'Steel production BF-BOF + CCUS',
     ]
 
-
+#%%
 f = db.f.loc[ghgs.keys(),(slice(None),'Activity',steel_acts)]
 for ghg,gwp in ghgs.items():
     f.loc[ghg,:] *= gwp
@@ -93,30 +102,7 @@ e = e.to_frame().T
 f_ex = np.diagflat(e.values) @ db.w.values
 f_ex = pd.DataFrame(f_ex, index=e.columns, columns= e.columns)
 
-f_ex = f_ex.loc[(slice(None),'Activity',slice(None)),(slice(None),'Activity',['DRI-NG','EAF-NG'])]
-f_ex.to_clipboard()
+f_ex_filtered = f_ex.loc[(slice(None),'Activity',slice(None)),(slice(None),'Activity',['Steel production through 100%H2-DR','EAF-H2'])]
+f_ex_filtered.to_clipboard()
 
-
-# %% Export aggregated database to txt
-db.to_txt(os.path.join(onedrive_folder,paths['database']['exiobase']['extended']))
-
-# %%
-steel_acts = [
-    'Steel production through 100%H2-DR',
-    'Steel production with H2 inj to BF',
-    'Steel production with charcoal inj to BF',
-    'Steel production with charcoal inj to BF + CCUS',
-    'Steel production through NG-DR',
-    'Steel production BF-BOF + CCUS',
-    'Manufacture of basic iron and steel and of ferro-alloys and first products thereof',
-    'Re-processing of secondary steel into new steel',
-    'Hydrogen production with electrolysis',
-    'Hydrogen production with steam reforming',
-    ]
-
-p = db.p.loc[(slice(None),'Activity',steel_acts),:]
-p = p.droplevel(1)
-p = p.unstack()
-
-p.to_clipboard()
 # %%
