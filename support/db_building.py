@@ -2,32 +2,25 @@
 import mario
 import yaml
 import os 
-from ember_remapping import map_ember_to_classification
+from ember.ember_remapping import map_ember_to_classification
 import pandas as pd
 import time
 import warnings
-
 warnings.filterwarnings("ignore")
 
-user = 'LR'
-
-with open('paths.yml', 'r') as file:
-    paths = yaml.safe_load(file)
-
-folder = paths['onedrive_folder'][user]
-
 #%% Parse raw Exiobase database
-mode = 'flows'
+# Path should target the folder containing the txt files ("flows")
+
 db = mario.parse_from_txt(
-    path = os.path.join(folder,paths['database']['exiobase']['raw']),
-    mode=mode,
+    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase Hybrid 3.3.18 with VA/flows',
+    mode='flows',
     table='SUT'
     )
 
-# %% Get excel to aggregate database (Comment if already done)
+# %% Get excel to aggregate database (Comment if already done) - Comment in case the file is already available
 # db.get_aggregation_excel('aggregations/raw_to_aggregated.xlsx')
 
-#%% Aggregate database  
+#%% Aggregate database electricity activities and commodities (Aggregation consistent with EMBER)
 db.aggregate(
     io = 'aggregations/raw_to_aggregated.xlsx',
     ignore_nan=True
@@ -36,10 +29,10 @@ db.aggregate(
 #%% Update electricity mixes
 # Parse ember electricity generation data, map to exiobase and get electricity mix for a given year 
 ee_mix = map_ember_to_classification(
-    path = os.path.join(folder,paths['database']['ember']),
-    classification = 'EXIO3',
-    year = 2023,
-    mode = 'mix',
+    path = 'support/ember/yearly_full_release_long_format.csv',  # ember yearly electricity data in csv format
+    classification = 'EXIO3', # exiobase 3 country classification
+    year = 2023, 
+    mode = 'mix', # return the mix of electricity generation (other options are 'mix' and 'values')
 )
 
 #%% Change electricity mix from the use side, keeping all techs disaggregated
@@ -88,7 +81,7 @@ db.z.loc[('IT','Commodity',ee_com),:]/db.u.loc[('IT','Commodity',ee_com),:].sum(
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
 
 # Adding two new activities to the database to represent the production of "Blast furnace gas" and "Oxygen steel furnace gas"
-master_file_path = os.path.join(folder,paths['inventories'],'blastfurnacegas.xlsx')
+master_file_path = 'inventories/blastfurnacegas.xlsx'
 db.read_add_sectors_excel(master_file_path,read_inventories=True)
 db.add_sectors()
 
@@ -149,6 +142,8 @@ f = f.droplevel(0,axis=1)
 f.to_clipboard()
 
 # %% Export aggregated database to txt
-db.to_txt(os.path.join(folder,paths['database']['exiobase']['aggregated'])) 
+db.to_txt(
+    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Raw_aggregated'
+) 
 
 # %%

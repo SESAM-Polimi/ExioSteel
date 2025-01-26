@@ -1,6 +1,7 @@
 onedrive_folder: 
   LR: '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/'
   DG: ''
+  HO: '' #path to the folder where you store exiobase raw database (via wetransfer)
 
 
 database:
@@ -10,4 +11,3 @@ database:
     extended: 'ExioSteel/Extended'
   ember: 'EMBER/yearly_full_release_long_format.csv'
 
-inventories: 'ExioSteel/Inventories'
