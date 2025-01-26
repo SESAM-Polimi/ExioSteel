@@ -79,10 +79,11 @@ db.reset_to_coefficients('baseline')
 db.z.loc[('IT','Commodity',ee_com),:]/db.u.loc[('IT','Commodity',ee_com),:].sum(0)
 
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
+# This procedure is done with the new add sectors method
 
 # Adding two new activities to the database to represent the production of "Blast furnace gas" and "Oxygen steel furnace gas"
 master_file_path = 'inventories/blastfurnacegas.xlsx'
-db.read_add_sectors_excel(master_file_path,read_inventories=True)
+db.read_add_sectors_excel(master_file_path,read_inventories=True)  # read_inventories=True because the file is already prepared
 db.add_sectors()
 
 # changing emissions of the two sectors

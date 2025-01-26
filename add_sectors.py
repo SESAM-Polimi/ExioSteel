@@ -3,16 +3,11 @@ import mario
 import yaml
 import os
 
-user = 'LR'
-with open('support/paths.yml', 'r') as file:
-    paths = yaml.safe_load(file)
-
-onedrive_folder = paths['onedrive_folder'][user]
-master_file_path = os.path.join(onedrive_folder,paths['inventories'],'steelmaking_routes.xlsx')
+master_file_path = 'support/inventories/steelmakingroutes.xlsx'
 
 #%%
 db = mario.parse_from_txt(
-    path=os.path.join(onedrive_folder,paths['database']['exiobase']['aggregated'],'flows'),
+    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Raw_aggregated/flows',
     mode='flows',
     table='SUT',
 )
@@ -30,9 +25,11 @@ db.read_add_sectors_excel(master_file_path,read_inventories=True)
 db.add_sectors()
 
 # %% Export aggregated database to txt
-db.to_txt(os.path.join(onedrive_folder,paths['database']['exiobase']['extended']))
+db.to_txt(
+    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended'
+)
 
-# %%
+# %%  List sectors and emission accounts
 ghgs = {
     'Carbon dioxide, fossil (air - Emiss)':1,
     'CH4 (air - Emiss)':26,
@@ -41,33 +38,16 @@ ghgs = {
 
 steel_acts = [
     'Manufacture of basic iron and steel and of ferro-alloys and first products thereof',
-    'DRI-NG',
-    'DRI-NG-CCS',
-    'DRI-COAL',
-    'DRI-COAL-CCS',
-    'DRI-H2',
-    'DRI-BECCS',
-    'AEL-EAF',
-    'EAF-NG',
-    'EAF-NG-CCS',
-    'EAF-COAL',
-    'EAF-COAL-CCS',
-    'EAF-H2',
-    'EAF-BECCS',
-    'SAF-BOF-NG',
-    'SAF-BOF-H2',
-    'SAF-BOF-BECCS',
-    'MOE',
-    'SR-BOF',
-    'SR-BOF-CCS',
-    'BF-BOF-CCS-73%',
-    'BF-BOF-CCS-86%',
-    'BF-BOF-BECCSmax',
-    'BF-BOF-BECCSmin',
-    'Re-processing of secondary steel into new steel',
+    'Steel production through 100%H2-DR',
+    'Steel production with H2 inj to BF',
+    'Steel production with charcoal inj to BF',
+    'Steel production with charcoal inj to BF + CCUS',
+    'Steel production through NG-DR',
+    'Steel production BF-BOF + CCUS',
     ]
 
-#%%
+#%% Calculate footprints of aggregated GHGs
+
 f = db.f.loc[ghgs.keys(),(slice(None),'Activity',steel_acts)]
 for ghg,gwp in ghgs.items():
     f.loc[ghg,:] *= gwp
@@ -80,23 +60,5 @@ f.set_index(['Region','Activity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
 f.to_clipboard()
-
-
-#%%
-import numpy as np
-import pandas as pd
-
-e = db.e.loc[ghgs.keys(),:]
-for ghg,gwp in ghgs.items():
-    e.loc[ghg,:] *= gwp
-
-e = e.sum(0)
-e = e.to_frame().T
-
-f_ex = np.diagflat(e.values) @ db.w.values
-f_ex = pd.DataFrame(f_ex, index=e.columns, columns= e.columns)
-
-f_ex_filtered = f_ex.loc[(slice(None),'Activity',slice(None)),(slice(None),'Activity',['Steel production through 100%H2-DR','EAF-H2'])]
-f_ex_filtered.to_clipboard()
 
 # %%
