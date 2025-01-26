@@ -47,7 +47,6 @@ steel_acts = [
     ]
 
 #%% Calculate footprints of aggregated GHGs
-
 f = db.f.loc[ghgs.keys(),(slice(None),'Activity',steel_acts)]
 for ghg,gwp in ghgs.items():
     f.loc[ghg,:] *= gwp
@@ -59,6 +58,6 @@ f = f.drop('Item',axis=1)
 f.set_index(['Region','Activity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
-f.to_clipboard()
+f.to_excel('results/footprints.xlsx') # export to excel
 
 # %%
