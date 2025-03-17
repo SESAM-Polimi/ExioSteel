@@ -3,7 +3,7 @@ import mario
 import yaml
 import os
 
-master_file_path = 'support/inventories/steelmakingroutes.xlsx'
+master_file_path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Model/Master.xlsx'
 
 #%%
 db = mario.parse_from_txt(
@@ -24,9 +24,27 @@ db.read_add_sectors_excel(master_file_path,read_inventories=True)
 #%%
 db.add_sectors()
 
+
+#%%
+techs = [
+    'Manufacture of basic iron and steel and of ferro-alloys and first products thereof',
+    'Hydrogen production with electrolysis',
+    'DRI-EAF-NG',
+    'AEL-EAF',
+    'BF-BOF-CCS-73%',
+    'BF-BOF-BECCSmin',
+]
+
+db.u.loc[
+   :,('IT','Activity',techs)
+].to_clipboard()
+
+
 # %% Export aggregated database to txt
 db.to_txt(
-    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended'
+    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended',
+    flows=False,
+    coefficients=True,
 )
 
 # %%  List sectors and emission accounts
@@ -38,12 +56,30 @@ ghgs = {
 
 steel_acts = [
     'Manufacture of basic iron and steel and of ferro-alloys and first products thereof',
-    'Steel production through 100%H2-DR',
-    'Steel production with H2 inj to BF',
-    'Steel production with charcoal inj to BF',
-    'Steel production with charcoal inj to BF + CCUS',
-    'Steel production through NG-DR',
-    'Steel production BF-BOF + CCUS',
+    'Manufacturing of steam reformer',
+    'Manufacturing of electrolyser',
+    'Hydrogen production with steam reforming',
+    'Hydrogen production with steam reforming with CCS',
+    'Hydrogen production with coal gasification',
+    'Hydrogen production with coal gasification with CCS',
+    'Hydrogen production with electrolysis',
+    'DRI-EAF-NG',
+    'DRI-EAF-NG-CCS',
+    'DRI-EAF-COAL',
+    'DRI-EAF-COAL-CCS',
+    'DRI-EAF-H2',
+    'DRI-EAF-BECCS',
+    'DRI-ESF-BOF-NG',
+    'DRI-ESF-BOF-H2',
+    'DRI-ESF-BOF-BECCS',
+    'SR-BOF',
+    'SR-BOF-CCS',
+    'BF-BOF-CCS-73%',
+    'BF-BOF-CCS-86%',
+    'BF-BOF-BECCSmax',
+    'BF-BOF-BECCSmin',
+    'AEL-EAF',
+    'MOE',
     ]
 
 #%% Calculate footprints of aggregated GHGs

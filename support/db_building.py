@@ -29,7 +29,7 @@ db.aggregate(
 #%% Update electricity mixes
 # Parse ember electricity generation data, map to exiobase and get electricity mix for a given year 
 ee_mix = map_ember_to_classification(
-    path = 'support/ember/yearly_full_release_long_format.csv',  # ember yearly electricity data in csv format
+    path = 'ember/yearly_full_release_long_format.csv',  # ember yearly electricity data in csv format
     classification = 'EXIO3', # exiobase 3 country classification
     year = 2023, 
     mode = 'mix', # return the mix of electricity generation (other options are 'mix' and 'values')
