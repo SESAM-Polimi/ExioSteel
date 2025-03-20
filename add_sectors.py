@@ -24,22 +24,6 @@ db.read_add_sectors_excel(master_file_path,read_inventories=True)
 #%%
 db.add_sectors()
 
-
-#%%
-techs = [
-    'Manufacture of basic iron and steel and of ferro-alloys and first products thereof',
-    'Hydrogen production with electrolysis',
-    'DRI-EAF-NG',
-    'AEL-EAF',
-    'BF-BOF-CCS-73%',
-    'BF-BOF-BECCSmin',
-]
-
-db.u.loc[
-   :,('IT','Activity',techs)
-].to_clipboard()
-
-
 # %% Export aggregated database to txt
 db.to_txt(
     '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Extended',
@@ -50,8 +34,8 @@ db.to_txt(
 # %%  List sectors and emission accounts
 ghgs = {
     'Carbon dioxide, fossil (air - Emiss)':1,
-    'CH4 (air - Emiss)':26,
-    'N2O (air - Emiss)':298
+    'CH4 (air - Emiss)':29.8,
+    'N2O (air - Emiss)':273
     }
 
 steel_acts = [
@@ -69,9 +53,9 @@ steel_acts = [
     'DRI-EAF-COAL-CCS',
     'DRI-EAF-H2',
     'DRI-EAF-BECCS',
-    'DRI-ESF-BOF-NG',
-    'DRI-ESF-BOF-H2',
-    'DRI-ESF-BOF-BECCS',
+    'DRI-SAF-BOF-NG',
+    'DRI-SAF-BOF-H2',
+    'DRI-SAF-BOF-BECCS',
     'SR-BOF',
     'SR-BOF-CCS',
     'BF-BOF-CCS-73%',
@@ -79,7 +63,7 @@ steel_acts = [
     'BF-BOF-BECCSmax',
     'BF-BOF-BECCSmin',
     'AEL-EAF',
-    'MOE',
+    'MOE'
     ]
 
 #%% Calculate footprints of aggregated GHGs
@@ -95,5 +79,6 @@ f.set_index(['Region','Activity'],inplace=True)
 f = f.unstack()
 f = f.droplevel(0,axis=1)
 f.to_excel('results/footprints.xlsx') # export to excel
+
 
 # %%

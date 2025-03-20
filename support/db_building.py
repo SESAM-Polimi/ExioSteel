@@ -31,7 +31,7 @@ db.aggregate(
 ee_mix = map_ember_to_classification(
     path = 'ember/yearly_full_release_long_format.csv',  # ember yearly electricity data in csv format
     classification = 'EXIO3', # exiobase 3 country classification
-    year = 2023, 
+    year = None, 
     mode = 'mix', # return the mix of electricity generation (other options are 'mix' and 'values')
 )
 
@@ -52,7 +52,8 @@ for region_from in db.get_index('Region'):
 
     Y_ee = Y.loc[(region_from,slice(None),ee_com),:].sum(0).to_frame().T.values
 
-    ember_ee_mix = ee_mix.loc[(region_from,slice(None),ee_com),'Value'].to_frame()
+    region_latest_year = ee_mix.loc[(region_from,slice(None),slice(None))].index.get_level_values(0).max()
+    ember_ee_mix = ee_mix.loc[(region_from,region_latest_year,ee_com),'Value'].to_frame().sort_index(axis=0)
     ember_ee_mix.index = pd.MultiIndex.from_arrays([
         [region_from]*ember_ee_mix.shape[0],
         ['Commodity']*ember_ee_mix.shape[0],
@@ -74,9 +75,6 @@ z.update(u)
 db.update_scenarios('baseline',z=z)
 db.reset_to_coefficients('baseline')
 
-
-#%% check electricity mix
-db.z.loc[('IT','Commodity',ee_com),:]/db.u.loc[('IT','Commodity',ee_com),:].sum(0)
 
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
 # This procedure is done with the new add sectors method
@@ -121,26 +119,33 @@ z.update(s)
 db.update_scenarios('baseline',z=z,e=e)
 db.reset_to_coefficients('baseline')
 
-#%%
-ghgs = {
-    'Carbon dioxide, fossil (air - Emiss)':1,
-    'CH4 (air - Emiss)':26,
-    'N2O (air - Emiss)':298
-    }
+#%% Adding energy accounts from Exiobase 3.8.2 2011
+exiobase_382 = mario.parse_exiobase(
+    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase 3.8.2/IOT/IOT_2011_ixi.zip',
+    table = 'IOT',
+    unit = 'Monetary',
+)
+exiobase_382.aggregate('aggregations/aggr_exio_382.xlsx',ignore_nan=True)
 
-f = db.f.loc[ghgs.keys(),(slice(None),'Activity',parent_activity)]
-for ghg,gwp in ghgs.items():
-    f.loc[ghg,:] *= gwp
+E_iot = exiobase_382.E
+E_sut = db.E
+new_E_sut = pd.DataFrame(0.0, index=E_iot.index, columns=E_sut.columns)
+new_column_levels = pd.MultiIndex.from_arrays([
+    E_iot.columns.get_level_values(0),
+    ['Activity' for i in range(E_iot.shape[1])],
+    E_iot.columns.get_level_values(2)
+])
 
-f = f.sum(0)
-f = f.to_frame()    
-f.reset_index(inplace=True)
-f.columns = ['Region','Item','Activity','Value']
-f = f.drop('Item',axis=1)
-f.set_index(['Region','Activity'],inplace=True)
-f = f.unstack()
-f = f.droplevel(0,axis=1)
-f.to_clipboard()
+E_iot.columns = new_column_levels
+
+new_E_sut.update(E_iot)
+new_units_sut = exiobase_382.units['Satellite account']
+
+db.add_extensions(
+    io=new_E_sut,
+    units=new_units_sut.loc[new_E_sut.index], # We should only pass the items that are in the new_E_sut
+    matrix='E'
+)
 
 # %% Export aggregated database to txt
 db.to_txt(
