@@ -36,45 +36,49 @@ ee_mix = map_ember_to_classification(
 )
 
 #%% Change electricity mix from the use side, keeping all techs disaggregated
-z = db.z
-u = db.u
-Y = db.Y
+def change_mix(db, region, mix, scenario):
 
-ee_com = ['Coal', 'Gas', 'Other Fossil','Nuclear','Bioenergy','Hydro','Other Renewables','Solar','Wind']
+    if scenario != 'baseline':
+        db.clone_scenario(scenario,'baseline')
+    
+    u = db.u
+    Y = db.Y
+    z = db.z
 
-for region_from in db.get_index('Region'):
-    start = time.time()
-    print(region_from,end=' ')
+    for region in db.get_index('Region'):
+        start = time.time()
+        print(region,end=' ')
 
-    u_ee = u.loc[(region_from,slice(None),ee_com),:]
-    u_index = u_ee.index
-    u_ee = u_ee.sum(0).to_frame().T.values
+        u_ee = u.loc[(region,slice(None),ee_mix.index),:]
+        u_index = u_ee.index
+        u_ee = u_ee.sum(0).to_frame().T.values
 
-    Y_ee = Y.loc[(region_from,slice(None),ee_com),:].sum(0).to_frame().T.values
+        Y_ee = Y.loc[(region,slice(None),ee_mix.index),:].sum(0).to_frame().T.values
 
-    region_latest_year = ee_mix.loc[(region_from,slice(None),slice(None))].index.get_level_values(0).max()
-    ember_ee_mix = ee_mix.loc[(region_from,region_latest_year,ee_com),'Value'].to_frame().sort_index(axis=0)
-    ember_ee_mix.index = pd.MultiIndex.from_arrays([
-        [region_from]*ember_ee_mix.shape[0],
-        ['Commodity']*ember_ee_mix.shape[0],
-        ember_ee_mix.index.get_level_values(-1)
-    ],names=["Region","Level","Item"])
+        region_latest_year = ee_mix.loc[(region,slice(None),slice(None))].index.get_level_values(0).max()
+        ember_ee_mix = ee_mix.loc[(region,region_latest_year,ee_mix.index),'Value'].to_frame().sort_index(axis=0)
+        ember_ee_mix.index = pd.MultiIndex.from_arrays([
+            [region]*ember_ee_mix.shape[0],
+            ['Commodity']*ember_ee_mix.shape[0],
+            ember_ee_mix.index.get_level_values(-1)
+        ],names=["Region","Level","Item"])
 
-    region_ee_mix = pd.DataFrame(0,index = u_index, columns = ['Value'])
-    region_ee_mix.update(ember_ee_mix)
-    region_ee_mix = region_ee_mix.values
+        region_ee_mix = pd.DataFrame(0,index = u_index, columns = ['Value'])
+        region_ee_mix.update(ember_ee_mix)
+        region_ee_mix = region_ee_mix.values
 
-    new_u_ee = pd.DataFrame(region_ee_mix @ u_ee, index=u_index, columns=u.columns)
-    new_Y_ee = pd.DataFrame(region_ee_mix @ Y_ee, index=u_index, columns=Y.columns)
+        new_u_ee = pd.DataFrame(region_ee_mix @ u_ee, index=u_index, columns=u.columns)
+        new_Y_ee = pd.DataFrame(region_ee_mix @ Y_ee, index=u_index, columns=Y.columns)
 
-    u.update(new_u_ee)
-    Y.update(new_Y_ee)
-    print('done in {:.2f} s'.format(time.time()-start))
+        u.update(new_u_ee)
+        Y.update(new_Y_ee)
+        print('done in {:.2f} s'.format(time.time()-start))
 
-z.update(u)
-db.update_scenarios('baseline',z=z)
-db.reset_to_coefficients('baseline')
+    z.update(u)
+    db.update_scenarios(scenario,z=z)
+    db.reset_to_coefficients(scenario)
 
+change_electricity_mix(db,ee_mix,'baseline')
 
 #%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
 # This procedure is done with the new add sectors method
