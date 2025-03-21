@@ -7,7 +7,7 @@ import warnings
 import os
 warnings.filterwarnings("ignore")
 
-scenarios = ['baseline','NDC_LTT','NDC_LTT_CBAM','NDC_LTT_CBAM-G_SUBS','NDC_LTT_CBAM-G_SUBS_HI']
+scenarios = ['NDC_LTT','NDC_LTT_CBAM','NDC_LTT_CBAM-G_SUBS','NDC_LTT_CBAM-G_SUBS_HI']
 years = range(2025,2051,5)
 ghgs = {'Carbon dioxide, fossil (air - Emiss)':1,'CH4 (air - Emiss)':29.8,'N2O (air - Emiss)':273}
 energy = ['Energy Carrier Supply: Total']
@@ -17,6 +17,7 @@ regions = {
 }
 
 steel_com = 'Basic iron and steel and of ferro-alloys and first products thereof'
+
 results_folder = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
 
 #%% Parse Exiobase database extended to new sectors as well as mixes projections for steel and electricity
@@ -39,9 +40,9 @@ for scenario in scenarios:
 
             print('Processing',scenario,year)
             z = db.z
-            u = db.u
+            # u = db.u
             s = db.s
-            Y = db.Y
+            # Y = db.Y
 
             # Update electricity and steel mixes
             for r_cluster,r_lists in regions.items():
@@ -69,27 +70,27 @@ for scenario in scenarios:
                     
                         return mix_yr
                 
-                    ee_mix_yr = rearrange_mixes(ee_mixes,scenario,r_cluster,region_from,year)
+                    # ee_mix_yr = rearrange_mixes(ee_mixes,scenario,r_cluster,region_from,year)
                     steel_mix_yr = rearrange_mixes(steel_mixes,scenario,r_cluster,region_from,year)
 
-                    ee_coms = ee_mix_yr.index.get_level_values('Item')
+                    # ee_coms = ee_mix_yr.index.get_level_values('Item')
                     steel_acts = steel_mix_yr.index.get_level_values('Item')
 
 
-                    u_ee = u.loc[(region_from,slice(None),ee_coms),:]
-                    u_index = u_ee.index
-                    u_ee = u_ee.sum(0).to_frame().T.values
-                    Y_ee = Y.loc[(region_from,slice(None),ee_coms),:].sum(0).to_frame().T.values
+                    # u_ee = u.loc[(region_from,slice(None),ee_coms),:]
+                    # u_index = u_ee.index
+                    # u_ee = u_ee.sum(0).to_frame().T.values
+                    # Y_ee = Y.loc[(region_from,slice(None),ee_coms),:].sum(0).to_frame().T.values
 
-                    region_ee_mix = pd.DataFrame(0,index = u_index, columns = ['Value'])
-                    region_ee_mix.update(ee_mix_yr)
-                    region_ee_mix = region_ee_mix.values
+                    # region_ee_mix = pd.DataFrame(0,index = u_index, columns = ['Value'])
+                    # region_ee_mix.update(ee_mix_yr)
+                    # region_ee_mix = region_ee_mix.values
 
-                    new_u_ee = pd.DataFrame(region_ee_mix @ u_ee, index=u_index, columns=u.columns)
-                    new_Y_ee = pd.DataFrame(region_ee_mix @ Y_ee, index=u_index, columns=Y.columns)
+                    # new_u_ee = pd.DataFrame(region_ee_mix @ u_ee, index=u_index, columns=u.columns)
+                    # new_Y_ee = pd.DataFrame(region_ee_mix @ Y_ee, index=u_index, columns=Y.columns)
 
-                    u.update(new_u_ee)
-                    Y.update(new_Y_ee)
+                    # u.update(new_u_ee)
+                    # Y.update(new_Y_ee)
 
                     old_market_share = s.loc[
                         (region_from, 'Activity', steel_acts),
@@ -102,7 +103,7 @@ for scenario in scenarios:
 
                     print('done in {:.2f} s'.format(time.time()-start))
 
-            z.update(u)
+            # z.update(u)
             z.update(s)
 
             db.update_scenarios('shock',z=z)
@@ -139,6 +140,7 @@ for scenario in scenarios:
             f_ene = db.query(matrices='f',scenarios='shock').loc[energy,:]
             f_ene_act = f_ene.loc[:,(slice(None),'Activity',steel_acts)]
             f_ene_com = f_ene.loc[:,(slice(None),'Commodity',steel_com)]
+            f_ene_act.T.to_csv(os.path.join(results_folder,'Energy footprints/f_ene_act_{}_{}.csv'.format(scenario,str(year))))
             f_ene_com.T.to_csv(os.path.join(results_folder,'Energy footprints/f_ene_com_{}_{}.csv'.format(scenario,str(year))))
 
             f_ex_ene = calc_f_ex(f_ene,db.query(matrices='w',scenarios='shock'))
@@ -182,6 +184,7 @@ for scenario in scenarios:
         f_ene = db.query(matrices='f',scenarios='baseline').loc[energy,:]
         f_ene_act = f_ene.loc[:,(slice(None),'Activity',steel_acts)]
         f_ene_com = f_ene.loc[:,(slice(None),'Commodity',steel_com)]
+        f_ene_act.T.to_csv(os.path.join(results_folder,'Energy footprints/f_ene_act_{}.csv'.format(scenario)))
         f_ene_com.T.to_csv(os.path.join(results_folder,'Energy footprints/f_ene_com_{}.csv'.format(scenario)))
 
         f_ex_ene = calc_f_ex(f_ene,db.query(matrices='w',scenarios='baseline'))
