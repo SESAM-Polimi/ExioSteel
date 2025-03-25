@@ -69,6 +69,16 @@ for commodity,info in mixes.items():
     df = df.div(df.groupby(['Scenario', 'Region']).transform('sum'))
     df = df.groupby(indices).sum()
 
+    df = df.replace(0, 1e-8)
     df.to_excel("{}_mixes.xlsx".format(commodity))
+
+# final demand
+variables = ['Consumption|Steel']#,'Exports|Steel']
+df = pd.read_excel(path,sheet_name='EUSteel')
+df = df.query("Variable in @variables") 
+df = df.drop(columns=to_drop)
+df.set_index(indices,inplace=True)
+df *= 1e6 # Mton to ton
+df.to_excel("Steel_consumption.xlsx")
 
 # %%

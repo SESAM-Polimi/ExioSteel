@@ -4,16 +4,18 @@ import os
 import plotly.express as px
 import inspect
 
+aggregated = True
 scenarios = ['baseline','NDC_LTT','NDC_LTT_CBAM','NDC_LTT_CBAM-G_SUBS','NDC_LTT_CBAM-G_SUBS_HI']
 EU_countries = ['AT','BE','BG','CY','CZ','DE','DK','EE','ES','FI','FR','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK']
 years = range(2025,2051,5)
-results_folder = ''#'/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
+results_folder = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
 
 steel_acts_sort = ['BF-BOF','BF-BOF-BECCSmax','BF-BOF-BECCSmin','BF-BOF-CCS-73%','BF-BOF-CCS-86%','DRI-EAF-COAL','DRI-EAF-COAL-CCS','DRI-EAF-BECCS','DRI-EAF-NG','DRI-EAF-NG-CCS','DRI-EAF-H2','SR-BOF','SR-BOF-CCS','AEL-EAF','MOE','DRI-SAF-BOF-BECCS','DRI-SAF-BOF-H2','DRI-SAF-BOF-NG','Secondary']
 
 def merge_scenario_data(
         folder,
         file_prefix,
+        aggregated,
         baseline_year,
         keep_baseline,
         reg_average,
@@ -28,14 +30,20 @@ def merge_scenario_data(
         for scenario in scenarios:
 
             if scenario == 'baseline':
-                path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}.csv')
+                if aggregated:
+                    path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}_aggr.csv')
+                else:
+                    path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}.csv')
                 df = pd.read_csv(path,index_col=[0,1,2])
                 df.columns = pd.MultiIndex.from_arrays([[scenario],[str(baseline_year)]],names=['Scenario','Year'])
                 data = pd.concat([data,df],axis=1)
             
             else:
                 for year in years:
-                    path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}_{str(year)}.csv')
+                    if aggregated:
+                        path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}_{str(year)}_aggr.csv')
+                    else:
+                        path = os.path.join(results_folder,folder,f'{file_prefix}_{scenario}_{str(year)}.csv')
                     df = pd.read_csv(path,index_col=[0,1,2])
                     df.columns = pd.MultiIndex.from_arrays([[scenario],[str(year)]],names=['Scenario','Year'])
                     data = pd.concat([data,df],axis=1)
@@ -50,7 +58,11 @@ def merge_scenario_data(
         if reg_list != None:
             data = data.query('Region in @reg_list')
         else:
-            data = data.query('Region in @EU_countries')
+            if aggregated:
+                EU_regions = ['EU-12','EU-15']
+                data = data.query('Region in @EU_regions')
+            else:
+                data = data.query('Region in @EU_countries')
         
         if years_list != None:
             data = data.query('Year in @years_list')
@@ -115,6 +127,7 @@ def get_expression(x, y, facet_col, facet_row, color, barmode, animation_frame):
 def plot_f(
         folder,
         file_prefix,
+        aggregated,
         baseline_year = 2024,
         keep_baseline = False,
         reg_average = False,
@@ -131,7 +144,7 @@ def plot_f(
         animation_frame = None,
 ):
     
-    data = merge_scenario_data(folder,file_prefix,baseline_year,keep_baseline,reg_average,reg_list,years_list,scenario_list)
+    data = merge_scenario_data(folder,file_prefix,aggregated,baseline_year,keep_baseline,reg_average,reg_list,years_list,scenario_list)
     
     expression = get_expression(x,y,facet_col,facet_row,color,barmode,animation_frame)
     fig = eval(expression)
@@ -149,7 +162,8 @@ def plot_f(
 data = plot_f(
     folder = 'GHG footprints',
     file_prefix = 'f_ghg_act',
-    reg_average=True,
+    aggregated = True,
+    # reg_average=True,
     # scenario_list = 'baseline',
     keep_baseline=True,
     barmode='group',
@@ -157,22 +171,24 @@ data = plot_f(
     facet_col=None,
     )
 
-# data = plot_f(
-#     folder = 'Energy footprints',
-#     file_prefix = 'f_ene_act',
-#     reg_average=True,
-#     # scenario_list = 'baseline',
-#     keep_baseline=True,
-#     barmode='group',
-#     animation_frame='Scenario',
-#     facet_col=None,
-#     )
+data = plot_f(
+    folder = 'Energy footprints',
+    file_prefix = 'f_ene_act',
+    aggregated = True,
+    # reg_average=True,
+    # scenario_list = 'baseline',
+    keep_baseline=True,
+    barmode='group',
+    animation_frame='Scenario',
+    facet_col=None,
+    )
 
 #%% by commodities
 data = plot_f(
     folder = 'GHG footprints',
     file_prefix = 'f_ghg_com',
-    reg_average=True,
+    aggregated = True,
+    # reg_average=True,
     # scenario_list = 'baseline',
     keep_baseline=True,
     barmode='group',
@@ -183,7 +199,8 @@ data = plot_f(
 data = plot_f(
     folder = 'Energy footprints',
     file_prefix = 'f_ene_com',
-    reg_average=True,
+    aggregated = True,
+    # reg_average=True,
     # scenario_list = 'baseline',
     keep_baseline=True,
     barmode='group',
