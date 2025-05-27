@@ -10,9 +10,8 @@ warnings.filterwarnings("ignore")
 
 #%% Parse raw Exiobase database
 # Path should target the folder containing the txt files ("flows")
-
 db = mario.parse_from_txt(
-    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase Hybrid 3.3.18 with VA/flows',
+    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/3.3.18_mario_with_va/flows',
     mode='flows',
     table='SUT'
     )
@@ -36,7 +35,7 @@ ee_mix = map_ember_to_classification(
 )
 
 #%% Change electricity mix from the use side, keeping all techs disaggregated
-def change_mix(db, region, mix, scenario):
+def change_mix(db, ee_mix, scenario):
 
     if scenario != 'baseline':
         db.clone_scenario(scenario,'baseline')
@@ -49,14 +48,14 @@ def change_mix(db, region, mix, scenario):
         start = time.time()
         print(region,end=' ')
 
-        u_ee = u.loc[(region,slice(None),ee_mix.index),:]
+        u_ee = u.loc[(region,slice(None),sorted(list(set(list(ee_mix.index.get_level_values(-1)))))),:]
         u_index = u_ee.index
         u_ee = u_ee.sum(0).to_frame().T.values
 
-        Y_ee = Y.loc[(region,slice(None),ee_mix.index),:].sum(0).to_frame().T.values
+        Y_ee = Y.loc[(region,slice(None),sorted(list(set(list(ee_mix.index.get_level_values(-1)))))),:].sum(0).to_frame().T.values
 
         region_latest_year = ee_mix.loc[(region,slice(None),slice(None))].index.get_level_values(0).max()
-        ember_ee_mix = ee_mix.loc[(region,region_latest_year,ee_mix.index),'Value'].to_frame().sort_index(axis=0)
+        ember_ee_mix = ee_mix.loc[(region,region_latest_year,sorted(list(set(list(ee_mix.index.get_level_values(-1)))))),'Value'].to_frame().sort_index(axis=0)
         ember_ee_mix.index = pd.MultiIndex.from_arrays([
             [region]*ember_ee_mix.shape[0],
             ['Commodity']*ember_ee_mix.shape[0],
@@ -78,56 +77,14 @@ def change_mix(db, region, mix, scenario):
     db.update_scenarios(scenario,z=z)
     db.reset_to_coefficients(scenario)
 
-change_electricity_mix(db,ee_mix,'baseline')
-
-#%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
-# This procedure is done with the new add sectors method
-
-# Adding two new activities to the database to represent the production of "Blast furnace gas" and "Oxygen steel furnace gas"
-master_file_path = 'inventories/blastfurnacegas.xlsx'
-db.read_add_sectors_excel(master_file_path,read_inventories=True)  # read_inventories=True because the file is already prepared
-db.add_sectors()
-
-# changing emissions of the two sectors
-e = db.e
-s = db.s
-z = db.z
-
-for region in db.get_index('Region'):
-
-    parent_activity = db.add_sectors_master['Parent Activity'].unique()[0]
-    by_product_commodities = db.add_sectors_master['Commodity'].unique()
-    by_product_market_shares = db.s.loc[(region,'Activity',parent_activity),(region,'Commodity',by_product_commodities)].sum().sum()
-
-    # we estimated the allocation of emissions over multiple by-products more or less halved the real emission intensity of the parent activity
-    if by_product_market_shares != 0: 
-        # doubling emissions of "Manufacture of basic iron" activity if it produces by-products
-        e_cols_main = e.loc[:,(region,slice(None),parent_activity)]*2  
-        e.update(e_cols_main) 
-
-        # removing production of "Blast furnace gas" and "Oxygen steel furnace gas" from "Manufacture of basic iron"
-        s_byprod = s.loc[(region,'Activity',parent_activity),(region,'Commodity',by_product_commodities)]*0
-        s.update(s_byprod)
-
-        # null ghgs emissions for "Blast furnace gas production" and "Oxygen steel furnace gas production" activities
-        e_cols_new  = e.loc[:,(region,slice(None),db.new_activities)]*0
-        e.update(e_cols_new) 
-
-        for new_act in db.new_activities:
-            # adding production of "Blast furnace gas" and "Oxygen steel furnace gas" to "Blast furnace gas production"
-            commodity = db.add_sectors_master.loc[db.add_sectors_master['Activity']==new_act,'Commodity'].values[0]
-            
-            s.loc[(region,'Activity',new_act),(region,'Commodity',commodity)] = 1
-
-z.update(s)
-db.update_scenarios('baseline',z=z,e=e)
-db.reset_to_coefficients('baseline')
+change_mix(db,ee_mix,'baseline')
 
 #%% Adding energy accounts from Exiobase 3.8.2 2011
 exiobase_382 = mario.parse_exiobase(
-    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase 3.8.2/IOT/IOT_2011_ixi.zip',
+    path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Monetary/v3.8.2/IOT/IOT_2011_ixi.zip',
     table = 'IOT',
     unit = 'Monetary',
+    version = '3.8.2',
 )
 exiobase_382.aggregate('aggregations/aggr_exio_382.xlsx',ignore_nan=True)
 
@@ -151,9 +108,59 @@ db.add_extensions(
     matrix='E'
 )
 
+#%% Splitting "BF-BOF" to disjoint its byproducts from the main product (steel production)
+# This procedure is done with the new add sectors method
+
+# Adding two new activities to the database to represent the production of "Blast furnace gas" and "Oxygen steel furnace gas"
+master_file_path = 'inventories/blastfurnacegas.xlsx'
+db.read_add_sectors_excel(master_file_path,read_inventories=True)  # read_inventories=True because the file is already prepared
+db.add_sectors()
+
+# changing emissions of the two sectors
+s = db.s
+u = db.u
+v = db.v
+e = db.e
+z = db.z
+
+for region in db.get_index('Region'):
+    print(region)
+
+    parent_activity = 'Manufacture of basic iron and steel and of ferro-alloys and first products thereof'
+    main_commodity = 'Basic iron and steel and of ferro-alloys and first products thereof'
+    by_product_commodities = db.add_sectors_master['Commodity'].unique()
+    by_product_market_shares = db.s.loc[(region,'Activity',parent_activity),(region,'Commodity',by_product_commodities)].sum().sum()
+
+    # removing production of "Blast furnace gas" and "Oxygen steel furnace gas" from "Manufacture of basic iron"
+    s_byprod = s.loc[(region,'Activity',parent_activity),(region,'Commodity',by_product_commodities)]*0
+    s.update(s_byprod)
+
+    # adding production of "Blast furnace gas" and "Oxygen steel furnace gas" to "Blast furnace gas production"
+    for new_act in db.new_activities:
+        commodity = db.add_sectors_master.loc[db.add_sectors_master['Activity']==new_act,'Commodity'].values[0]        
+        s.loc[(region,'Activity',new_act),(region,'Commodity',commodity)] = 1
+    
+    # updating use coefficients of main activity based on the sole production of steel
+    S_main = db.S.loc[(region,'Activity',parent_activity),(region,'Commodity',main_commodity)]
+    u_main = db.U.loc[:,(region,'Activity',parent_activity)]/S_main.sum()
+    u.update(u_main)
+
+    v_main = db.V.loc[:,(region,'Activity',parent_activity)]/S_main.sum()
+    v.update(v_main)
+
+    e_main = db.E.loc[:,(region,'Activity',parent_activity)]/S_main.sum()
+    e.update(e_main)
+
+
+z.update(s)
+z.update(u)
+
+db.update_scenarios('baseline',z=z,v=v,e=e)
+db.reset_to_coefficients('baseline')
+
 # %% Export aggregated database to txt
 db.to_txt(
-    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/ExioSteel/Raw_aggregated'
+    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v0.1.2',
 ) 
 
 # %%

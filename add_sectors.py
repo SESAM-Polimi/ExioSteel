@@ -7,7 +7,7 @@ master_file_path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLi
 
 #%%
 db = mario.parse_from_txt(
-    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Model/Raw_aggregated/flows',
+    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v0.1.2/flows',
     mode='flows',
     table='SUT',
 )
@@ -26,7 +26,7 @@ db.add_sectors()
 
 # %% Export aggregated database to txt
 db.to_txt(
-    '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Model/Extended',
+    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v0.1.3',
     flows=False,
     coefficients=True,
 )
