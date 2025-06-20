@@ -58,6 +58,27 @@ db = mario.parse_from_txt(
     table='SUT',
 )
 
+#%%
+f_techs = db.f.loc[ghgs.keys(),(slice(None),'Activity',steel_acts)]
+f_techs = f_techs.T
+f_techs = f_techs.stack()
+f_techs = f_techs.to_frame()
+f_techs.index.names = ['Region','Level','Tech','Gas']
+# f_techs.reset_index(inplace=True)
+f_techs = f_techs.unstack(level='Tech')
+f_techs = f_techs.droplevel(0,axis=1)  # remove the first level of the columns])
+f_techs = f_techs.droplevel(1,axis=0)
+f_techs = f_techs.unstack(level='Region')
+f_techs.loc['CH4 (air - Emiss)',:] *=29.8
+f_techs.loc['N2O (air - Emiss)',:] *=273
+f_techs = f_techs.sum(0)
+f_techs = f_techs.to_frame()
+f_techs = f_techs.unstack(level='Tech')
+f_techs = f_techs.droplevel(0,axis=1)  # remove the first level of the columns])
+
+f_techs.to_clipboard()
+
+
 #%% Read electricity and steel mixes
 ee_mixes = pd.read_excel('support/gcam_data/Electricity_mixes.xlsx',index_col=[0,1,2])
 steel_mixes = pd.read_excel('support/gcam_data/Steel_mixes.xlsx',index_col=[0,1,2])
@@ -155,7 +176,7 @@ for scenario in scenarios:
                     print('done in {:.2f} s'.format(time.time()-start))
 
 
-            # Update steel imports
+            # Update steel imports and final consumption
             for region_to in db.get_index('Region'):
                 u_steel_tot = u.loc[(slice(None),'Commodity',steel_com),(region_to,'Activity',slice(None))].sum(0).to_frame().T
                 Y_steel_tot = Y.loc[(slice(None),'Commodity',steel_com),(region_to,'Consumption category',slice(None))].sum(0).to_frame().T
@@ -227,7 +248,7 @@ for scenario in scenarios:
                 f_ex = np.diagflat(e.values) @ w.values
                 f_ex = pd.DataFrame(f_ex,index=w.index,columns=w.columns)
                 return f_ex
-
+            
             f_ghg = aggregate_ghgs(db_aggr.query(matrices='f',scenarios='shock').loc[ghgs.keys(),:],ghgs)
             E_ghg = aggregate_ghgs(db_aggr.query(matrices='E',scenarios='shock').loc[ghgs.keys(),:],ghgs)
             e_ghg = aggregate_ghgs(db_aggr.query(matrices='e',scenarios='shock').loc[ghgs.keys(),:],ghgs)
@@ -279,11 +300,32 @@ for scenario in scenarios:
             else:
                 f_ex_ene_act.to_csv(os.path.join(results_folder,'Energy footprints/f_ex_ene_act_{}_{}.csv'.format(scenario,str(year))))
                 f_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/f_ex_ene_com_{}_{}.csv'.format(scenario,str(year))))
+
+
+            def calc_FF_ex(f_ex,Y):
+                if Y.shape[1] > 1:
+                    Y = Y.sum(1).to_frame().T
+                F_ex_by_region = f_ex.values @ np.diagflat(Y.values)
+                F_ex = pd.DataFrame(F_ex_by_region, index=f_ex.index, columns=f_ex.columns)
+                return F_ex
+            
+            Y_EU = db_aggr.query(matrices='Y',scenarios='shock').loc[:,('EU27','Consumption category',slice(None))]
+            F_ex_ghg = calc_FF_ex(f_ex_ghg,Y_EU)
+            F_ex_ene = calc_FF_ex(f_ex_ene,Y_EU)
+
+            F_ex_ghg_com = F_ex_ghg.loc[(slice(None),'Activity',slice(None)),('EU27','Commodity',slice(None))]
+            F_ex_ene_com = F_ex_ene.loc[(slice(None),'Activity',slice(None)),('EU27','Commodity',slice(None))]
+
+            if aggregated:
+                F_ex_ghg_com.to_csv(os.path.join(results_folder,'GHG footprints/FF_ex_ghg_com_{}_{}_aggr.csv'.format(scenario,str(year))))
+                F_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/FF_ex_ene_com_{}_{}_aggr.csv'.format(scenario,str(year))))
+            else:
+                F_ex_ghg_com.to_csv(os.path.join(results_folder,'GHG footprints/FF_ex_ghg_com_{}_{}.csv'.format(scenario,str(year))))
+                F_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/FF_ex_ene_com_{}_{}.csv'.format(scenario,str(year))))
+
             print('done in ' + str(time.time()-start_calc) + ' s\n')
 
-
     else:
-        
         print('Processing',scenario)
         db_aggr = db.aggregate("support/aggregations/aggr_to_EU27.xlsx",ignore_nan=True, inplace=False)
 
@@ -361,6 +403,28 @@ for scenario in scenarios:
         else:
             f_ex_ene_act.to_csv(os.path.join(results_folder,'Energy footprints/f_ex_ene_act_{}.csv'.format(scenario)))
             f_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/f_ex_ene_com_{}.csv'.format(scenario)))
+
+        def calc_FF_ex(f_ex,Y):
+            if Y.shape[1] > 1:
+                Y = Y.sum(1).to_frame()
+            F_ex_by_region = f_ex.values @ np.diagflat(Y.values)
+            F_ex = pd.DataFrame(F_ex_by_region, index=f_ex.index, columns=f_ex.columns)
+            return F_ex
+        
+        Y_EU = db_aggr.query(matrices='Y',scenarios='baseline').loc[:,('EU27','Consumption category',slice(None))]
+        F_ex_ghg = calc_FF_ex(f_ex_ghg,Y_EU)
+        F_ex_ene = calc_FF_ex(f_ex_ene,Y_EU)
+
+        F_ex_ghg_com = F_ex_ghg.loc[(slice(None),'Activity',slice(None)),('EU27','Commodity',slice(None))]
+        F_ex_ene_com = F_ex_ene.loc[(slice(None),'Activity',slice(None)),('EU27','Commodity',slice(None))]
+
+        if aggregated:
+            F_ex_ghg_com.to_csv(os.path.join(results_folder,'GHG footprints/FF_ex_ghg_com_{}_aggr.csv'.format(scenario)))
+            F_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/FF_ex_ene_com_{}_aggr.csv'.format(scenario)))
+        else:
+            F_ex_ghg_com.to_csv(os.path.join(results_folder,'GHG footprints/FF_ex_ghg_com_{}.csv'.format(scenario)))
+            F_ex_ene_com.to_csv(os.path.join(results_folder,'Energy footprints/FF_ex_ene_com_{}.csv'.format(scenario)))
+
         print('done in ' + str(time.time()-start_calc) + ' s\n\n')
 
 
@@ -374,8 +438,8 @@ warnings.filterwarnings("ignore")
 
 path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
 folders_prefixes = {
-    'GHG footprints': ['f_ghg_act','f_ghg_com','f_ex_ghg_act','f_ex_ghg_com'],
-    'Energy footprints': ['f_ene_act','f_ene_com','f_ex_ene_act','f_ex_ene_com']
+    'GHG footprints': ['f_ghg_act','f_ghg_com','f_ex_ghg_act','f_ex_ghg_com','FF_ex_ghg_com'],
+    'Energy footprints': ['f_ene_act','f_ene_com','f_ex_ene_act','f_ex_ene_com','FF_ex_ene_com']
 }
 
 start_all = time.time()
@@ -399,7 +463,7 @@ for folder,prefixes in folders_prefixes.items():
 
             print(f'   {scenario} {year}',end=' ')
             start = time.time()
-            if "f_ex" not in prefix:
+            if "f_ex" not in prefix and "FF_ex" not in prefix:
                 temp_data = pd.read_csv(os.path.join(path,folder,file))
                 temp_data = temp_data.query('Region == "EU27"')   # filter only EU27
                 temp_data = temp_data.drop(columns='Level')
@@ -439,41 +503,55 @@ for folder,prefixes in folders_prefixes.items():
 
 print('\nAll done in {:.2f} s'.format(time.time()-start_all))
 
+#%%
+df = pd.read_csv('/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results/Merged/FF_ex_ghg_com.csv')
+df =df.query('Region_to == "EU27"')
+df.to_csv('/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results/Merged/FF_ex_ghg_com_EU27.csv',index=False)
+
 #%% multiply by volumes to get F
-import pandas as pd
-import os
-import warnings
+# import pandas as pd
+# import os
+# import warnings
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
-sn = slice(None)
+# sn = slice(None)
 
-steel_cons = pd.read_excel('support/gcam_data/Steel_consumption.xlsx',index_col=[0,1])
-steel_cons.columns.names = ['Year']
-steel_cons = steel_cons.stack().to_frame()
-steel_cons.columns = ['Value']
-steel_cons.reset_index(inplace=True)
+# steel_cons = pd.read_excel('support/gcam_data/Steel_consumption.xlsx',index_col=[0,1])
+# steel_cons.columns.names = ['Year']
+# steel_cons = steel_cons.stack().to_frame()
+# steel_cons.columns = ['Value']
+# steel_cons.reset_index(inplace=True)
 
-path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
-f_ex_ghg_com = pd.read_csv(os.path.join(path,f'Merged/f_ex_ghg_com.csv'),index_col=[5,6])
+# path = '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/IAM COMPACT Study 9/Results'
+# f_ex_ghg_com = pd.read_csv(os.path.join(path,f'Merged/f_ex_ghg_com.csv'),index_col=[5,6])
 
-for i in steel_cons.index:
-    scenario = steel_cons.loc[i,"Scenario"]
-    try:
-        year = steel_cons.loc[i,'Year']
-        f_ex_ghg_com.loc[(scenario,int(year)),"Value"] *= steel_cons.loc[i, 'Value']
-    except:
-        pass
+# for i in steel_cons.index:
+#     scenario = steel_cons.loc[i,"Scenario"]
+#     try:
+#         year = steel_cons.loc[i,'Year']
+#         f_ex_ghg_com.loc[(scenario,int(year)),"Value"] *= steel_cons.loc[i, 'Value']
+#     except:
+#         pass
 
-f_ex_ghg_com.to_csv(os.path.join(path,f'Merged/FF_ex_ghg_com.csv'))
+# f_ex_ghg_com.to_csv(os.path.join(path,f'Merged/FF_ex_ghg_com.csv'))
 
 
 # %%
-db.u.loc[
-    (slice(None),'Commodity',slice(None)),
-    ('EU-15','Activity',db.search("Activity","Aluminium")),
-].groupby(level=2).sum().to_clipboard()
+# db.u.loc[
+#     (slice(None),'Commodity',slice(None)),
+#     ('EU-15','Activity',db.search("Activity","Aluminium")),
+# ].groupby(level=2).sum().to_clipboard()
 
 
+e = db_aggr.e.loc["Carbon dioxide, fossil (air - Emiss)",:].values
+w = db_aggr.w.values
+Y = db_aggr.Y.sum(1).values
+
+f_ex = np.diagflat(e) @ w
+F_ex = f_ex @ np.diagflat(Y)
+
+F_ex = pd.DataFrame(F_ex,index=db_aggr.w.index,columns=db_aggr.w.columns).loc[(slice(None),'Activity',steel_acts),('EU27','Commodity',slice(None))].sum(0).T
+F_ex.to_clipboard()
 
 # %%

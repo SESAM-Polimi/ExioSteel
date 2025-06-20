@@ -133,6 +133,7 @@ for region in db.get_index('Region'):
 
     # removing production of "Blast furnace gas" and "Oxygen steel furnace gas" from "Manufacture of basic iron"
     s_byprod = s.loc[(region,'Activity',parent_activity),(region,'Commodity',by_product_commodities)]*0
+    s_byprod = s_byprod.to_frame().T
     s.update(s_byprod)
 
     # adding production of "Blast furnace gas" and "Oxygen steel furnace gas" to "Blast furnace gas production"
