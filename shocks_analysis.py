@@ -85,7 +85,7 @@ h2_acts = [
 
 #%% Parse Exiobase database extended to new sectors as well as mixes projections for steel and electricity
 db = mario.parse_from_txt(
-    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v1.0.1/coefficients',
+    path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v1.3.0/coefficients',
     mode='coefficients',
     table='SUT',
 )
