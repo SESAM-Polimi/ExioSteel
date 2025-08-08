@@ -159,9 +159,197 @@ z.update(u)
 db.update_scenarios('baseline',z=z,v=v,e=e)
 db.reset_to_coefficients('baseline')
 
+#%% manually fixing coefficients for re-processing of secondary steel into new steel and self-consumption of steel in Japan and South Korea
+steel_coms = 'Basic iron and steel and of ferro-alloys and first products thereof'
+
+z = db.z.copy()
+z.loc[('AU','Activity','Re-processing of secondary steel into new steel'),('AU','Commodity','Secondary steel for treatment; Re-processing of secondary steel into new steel')] = 101
+z.loc[('JP','Commodity',steel_coms),('JP','Activity',"Manufacture of basic iron and steel and of ferro-alloys and first products thereof")] = 0.2835556621431132
+z.loc[('KR','Commodity',steel_coms),('KR','Activity',"Manufacture of basic iron and steel and of ferro-alloys and first products thereof")] = 0.2835556621431132
+
+db.update_scenarios('baseline',z=z)
+db.reset_to_coefficients('baseline')
+
+#%% Fix steelmaking market shares
+# %% Parsing the raw exiobase database (data from World Steel Association 2023)
+# db = mario.parse_from_txt(
+#     path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v1.0.1/coefficients',
+#     mode='coefficients',
+#     table='SUT',
+# )
+
+steel_com = 'Basic iron and steel and of ferro-alloys and first products thereof'
+steelmaking_routes = {
+    'AT': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.907,
+        'Re-processing of secondary steel into new steel': 0.093,
+    },
+    'BE': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.693,
+        'Re-processing of secondary steel into new steel': 0.307,
+    },
+    'BG': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'HR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'CZ': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.956,
+        'Re-processing of secondary steel into new steel': 0.044,
+    },
+    'FI': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.62,
+        'Re-processing of secondary steel into new steel': 0.38,
+    },
+    'FR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.592,
+        'Re-processing of secondary steel into new steel': 0.408,
+    },
+    'DE': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.723,
+        'Re-processing of secondary steel into new steel': 0.277,
+    },
+    'GR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'HU': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.523,
+        'Re-processing of secondary steel into new steel': 0.477,
+    },
+    'IT': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.142,
+        'Re-processing of secondary steel into new steel': 0.858,
+    },
+    'LU': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'NL': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 1.0,
+        'Re-processing of secondary steel into new steel': 0.0,
+    },
+    'PL': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.488,
+        'Re-processing of secondary steel into new steel': 0.512,
+    },
+    'PT': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'RO': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.532,
+        'Re-processing of secondary steel into new steel': 0.468,
+    },
+    'SK': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.1,
+        'Re-processing of secondary steel into new steel': 0.9,
+    },
+    'SI': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.0,
+        'Re-processing of secondary steel into new steel': 1.0,
+    },
+    'ES': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.281,
+        'Re-processing of secondary steel into new steel': 0.719,
+    },
+    'SE': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.686,
+        'Re-processing of secondary steel into new steel': 0.314,
+    },
+    'TR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.284,
+        'Re-processing of secondary steel into new steel': 0.716,
+    },
+    'GB': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.796,
+        'Re-processing of secondary steel into new steel': 0.204,
+    },
+    'RU': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.68,
+        'Re-processing of secondary steel into new steel': 0.32,
+    },
+    'CA': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.582,
+        'Re-processing of secondary steel into new steel': 0.418,
+    },
+    'MX': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.066,
+        'Re-processing of secondary steel into new steel': 0.934,
+    },
+    'US': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.317,
+        'Re-processing of secondary steel into new steel': 0.683,
+    },
+    'BR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.775,
+        'Re-processing of secondary steel into new steel': 0.225,
+    },
+    'WL': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.32,
+        'Re-processing of secondary steel into new steel': 0.68,
+    },
+    'ZA': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.568,
+        'Re-processing of secondary steel into new steel': 0.432,
+    },
+    'WF': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.02,
+        'Re-processing of secondary steel into new steel': 0.98,
+    },
+    'CN': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.901,
+        'Re-processing of secondary steel into new steel': 0.099,
+    },
+    'IN': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.436,
+        'Re-processing of secondary steel into new steel': 0.564,
+    },
+    'JP': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.738,
+        'Re-processing of secondary steel into new steel': 0.262,
+    },
+    'KR': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.705,
+        'Re-processing of secondary steel into new steel': 0.295,
+    },
+    'WA': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.488,
+        'Re-processing of secondary steel into new steel': 0.512,
+    },
+    'WE': {
+        'Manufacture of basic iron and steel and of ferro-alloys and first products thereof': 0.41,
+        'Re-processing of secondary steel into new steel': 0.59,
+    },
+}
+
+z = db.z.copy()
+s = db.s.copy()
+
+for country, routes in steelmaking_routes.items():
+    for route,share in routes.items():
+        print(country, route, share)
+        s.loc[(country,slice(None),route),(country,slice(None),steel_com)] = share
+
+z.update(s)
+
+db.update_scenarios('baseline',z=z)
+db.reset_to_coefficients('baseline')
+
+# db.to_txt(
+#     path='/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v1.0.1',
+#     flows=False,
+#     coefficients=True,
+# )
+
 # %% Export aggregated database to txt
 db.to_txt(
     '/Users/lorenzorinaldi/Library/CloudStorage/OneDrive-SharedLibraries-PolitecnicodiMilano/DENG-SESAM - Documenti/c-Research/a-Datasets/Exiobase/Hybrid/EnergyTranstionEdition/v0.1.2',
 ) 
 
+# %%
+db.f.loc['Carbon dioxide, fossil (air - Emiss)',(slice(None),'Commodity',steel_com)]
 # %%
