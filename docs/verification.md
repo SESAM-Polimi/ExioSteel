@@ -61,6 +61,7 @@ files already verified from the identical v1.3.2 record were reused; they were n
 downloaded a second time just to change the record ID.
 
 ```bash
+python -m pip install pytest
 python -m pytest -q
 python tools/check_docs.py
 ```
