@@ -1,0 +1,33 @@
+{
+  "source_doi": "10.1021/acs.est.5c15099.s001",
+  "source_url": "https://acs.figshare.com/articles/dataset/Linking_Global_Integrated_Assessment_and_Hybrid_Input_Output_Models_To_Support_Steel_Decarbonization_Policies_in_Europe/32613266",
+  "download_url": "https://ndownloader.figshare.com/files/65390366",
+  "source_file": "es5c15099_si_001.xlsx",
+  "source_md5": "156a062eab9ee8d9f25af21faec1d4f1",
+  "sheet": "8. Results | GCAM full data",
+  "regions": [
+    "EU-12",
+    "EU-15"
+  ],
+  "variables": [
+    "Secondary Energy|Electricity|Biomass",
+    "Secondary Energy|Electricity|Coal",
+    "Secondary Energy|Electricity|Gas",
+    "Secondary Energy|Electricity|Hydro",
+    "Secondary Energy|Electricity|Geothermal",
+    "Secondary Energy|Electricity|Nuclear",
+    "Secondary Energy|Electricity|Oil",
+    "Secondary Energy|Electricity|Solar",
+    "Secondary Energy|Electricity|Wind"
+  ],
+  "operations": [
+    "trim metadata whitespace",
+    "select rows",
+    "sort rows",
+    "write CSV with round-trip precision"
+  ],
+  "physical_values_changed": false,
+  "rows": 72,
+  "license": "CC BY-NC 4.0",
+  "csv_sha256": "37883892477657cab4dea679c70628e11f9e52349619fb7bbc5912f65f0c27e5"
+}

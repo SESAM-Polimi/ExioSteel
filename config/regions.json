@@ -1,0 +1,43 @@
+{
+  "eu-clusters": {
+    "EU-12": [
+      "EU-12"
+    ],
+    "EU-15": [
+      "EU-15"
+    ]
+  },
+  "eu-countries": {
+    "EU-12": [
+      "BG",
+      "CY",
+      "CZ",
+      "EE",
+      "HR",
+      "HU",
+      "LT",
+      "LV",
+      "PL",
+      "RO",
+      "SI",
+      "SK"
+    ],
+    "EU-15": [
+      "AT",
+      "BE",
+      "DE",
+      "DK",
+      "ES",
+      "FI",
+      "FR",
+      "GR",
+      "IE",
+      "IT",
+      "LU",
+      "MT",
+      "NL",
+      "PT",
+      "SE"
+    ]
+  }
+}

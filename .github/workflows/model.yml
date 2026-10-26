@@ -1,0 +1,28 @@
+name: Coupling checks
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: requirements-model.txt
+      - name: Install pinned IO runtime and MARIO
+        run: |
+          python -m pip install -r requirements-model.txt pytest
+          python -m pip install --no-deps mariopy==1.0.0 -e .
+      - name: Verify input interpretation and native MARIO shocks
+        run: python -m pytest -q
+      - name: Check documentation and notebook syntax
+        run: python tools/check_docs.py
+      - name: Run the user command
+        run: gcam-mario demo --output outputs/ci-example
+      - name: Build installable distribution
+        run: python -m pip wheel --no-deps . --wheel-dir dist
