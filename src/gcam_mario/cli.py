@@ -30,7 +30,6 @@ def main(argv=None):
         command.add_argument("--year", type=int, default=2030)
         command.add_argument("--electricity-export", type=Path, help="GCAM CSV in physical output units")
         command.add_argument("--steel-export", type=Path, help="GCAM steel technology CSV in physical output units")
-        command.add_argument("--profile", choices=["eu-clusters", "eu-countries"], default="eu-clusters")
         command.add_argument("--region-map", type=Path, help="Explicit GCAM-region -> MARIO-region-list JSON")
         command.add_argument("--only", choices=["both", "electricity", "steel"], default="both")
         command.add_argument("--output", type=Path)
@@ -49,7 +48,7 @@ def main(argv=None):
         mapping = json.loads(args.region_map.read_text()) if args.region_map else None
         kinds = ("electricity", "steel") if args.only == "both" else (args.only,)
         projections = Projections(electricity_export=args.electricity_export, steel_export=args.steel_export)
-        selected = projections.select(args.scenario, args.year, profile=args.profile, region_mapping=mapping, kinds=kinds)
+        selected = projections.select(args.scenario, args.year, region_mapping=mapping, kinds=kinds)
         output = args.output or Path("outputs")/f"{args.command}_{args.scenario}_{args.year}_{args.only}"
         if output.exists() and any(output.iterdir()) and not args.overwrite:
             raise ValueError(f"{output} is not empty; choose another --output or use --overwrite")

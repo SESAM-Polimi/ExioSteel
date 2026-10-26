@@ -43,9 +43,11 @@ written only once in `mixes.csv`. Do not sum the repeated `Share` column.
 ## Region concordance
 
 The default `eu-clusters` profile maps EU-12/EU-15 directly to the prepared MARIO
-regions. `eu-countries` applies those cluster mixes to the constituent country
+regions. In the Python API, `eu-countries` applies those cluster mixes to the constituent country
 codes recorded in the original aggregation workbook. It requires a country-level
 database; it cannot be applied to the two-region demo or cluster-prepared bundle.
+The CLI uses the cluster profile supported by its prepared database; the country
+profile is for Python callers supplying their own country-level MARIO database.
 
 A custom JSON maps each GCAM region to a list of MARIO regions:
 
