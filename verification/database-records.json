@@ -1,0 +1,84 @@
+{
+  "verified_on": "2026-10-26",
+  "all_six_published_matrix_signatures_equal": true,
+  "records": {
+    "18744457": {
+      "units.txt": {
+        "size": 40425,
+        "checksum": "md5:ae31001c2366d770815897f3f1061582"
+      },
+      "Y.txt": {
+        "size": 25939313,
+        "checksum": "md5:7aac2ac2a3c8c31e00a599467bb12f9c"
+      },
+      "e.txt": {
+        "size": 42273452,
+        "checksum": "md5:0e1a74806a3d745cea7a64e112298518"
+      },
+      "EY.txt": {
+        "size": 620930,
+        "checksum": "md5:4f3628107e84af39a3311746cc303c17"
+      },
+      "v.txt": {
+        "size": 2368938,
+        "checksum": "md5:861b55862520dca763f9cc2f04566347"
+      },
+      "z.txt": {
+        "size": 1706265266,
+        "checksum": "md5:57c5c675af8221ba05ec9df3390aa13a"
+      }
+    },
+    "17047525": {
+      "units.txt": {
+        "size": 40425,
+        "checksum": "md5:ae31001c2366d770815897f3f1061582"
+      },
+      "Y.txt": {
+        "size": 25939313,
+        "checksum": "md5:7aac2ac2a3c8c31e00a599467bb12f9c"
+      },
+      "e.txt": {
+        "size": 42273452,
+        "checksum": "md5:0e1a74806a3d745cea7a64e112298518"
+      },
+      "EY.txt": {
+        "size": 620930,
+        "checksum": "md5:4f3628107e84af39a3311746cc303c17"
+      },
+      "v.txt": {
+        "size": 2368938,
+        "checksum": "md5:861b55862520dca763f9cc2f04566347"
+      },
+      "z.txt": {
+        "size": 1706265266,
+        "checksum": "md5:57c5c675af8221ba05ec9df3390aa13a"
+      }
+    },
+    "16779787": {
+      "units.txt": {
+        "size": 40425,
+        "checksum": "md5:ae31001c2366d770815897f3f1061582"
+      },
+      "Y.txt": {
+        "size": 25939313,
+        "checksum": "md5:7aac2ac2a3c8c31e00a599467bb12f9c"
+      },
+      "e.txt": {
+        "size": 42273452,
+        "checksum": "md5:0e1a74806a3d745cea7a64e112298518"
+      },
+      "EY.txt": {
+        "size": 620930,
+        "checksum": "md5:4f3628107e84af39a3311746cc303c17"
+      },
+      "v.txt": {
+        "size": 2368938,
+        "checksum": "md5:861b55862520dca763f9cc2f04566347"
+      },
+      "z.txt": {
+        "size": 1706265266,
+        "checksum": "md5:57c5c675af8221ba05ec9df3390aa13a"
+      }
+    }
+  }
+}

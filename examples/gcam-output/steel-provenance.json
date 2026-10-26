@@ -1,0 +1,28 @@
+{
+  "source_file": "GCAM data.xlsx",
+  "sheet": "SteelProdTech",
+  "source_sha256": "a8013895abb96d51540060ba3ac4a323fbfe890b6042306bbb4fdae5cdb5706e",
+  "provided_by": "Study maintainer",
+  "regions": [
+    "EU-12",
+    "EU-15"
+  ],
+  "rows": 168,
+  "operations": [
+    "trim metadata whitespace",
+    "select rows and documented columns",
+    "sort rows",
+    "write CSV with round-trip precision"
+  ],
+  "physical_values_changed": false,
+  "csv_sha256": "d6c51151e7f99e90079c46c60d845d19423fe06bda29203b3bd5f535c86d6517",
+  "publication_note": "Published SI Figure3&4 table gives only EU27 totals; this file retains the regional GCAM output needed for the original coupling.",
+  "published_aggregate_comparison": {
+    "sheet": "4. Results | Figure3&4",
+    "rows": 504,
+    "max_absolute_difference_Mt_yr": 1.4210854715202004e-14,
+    "pass": true,
+    "rtol": 1e-08,
+    "atol_Mt_yr": 1e-08
+  }
+}

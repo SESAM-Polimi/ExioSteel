@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-26",
+  "installed_wheel_outside_checkout": true,
+  "offline": true,
+  "source_published_matrix_hashes_verified": true,
+  "regions": 23,
+  "gcam_scenario": "NDC_LTT_CBAM",
+  "year": 2030,
+  "checks": {
+    "baseline_unchanged": true,
+    "electricity_origin_and_consumer_totals_preserved": true,
+    "steel_supply_totals_preserved": true,
+    "technology_satellites_unchanged": true,
+    "electrolysis_exclusion_preserved": true
+  },
+  "output_hashes_verified": true,
+  "actual_coefficients_match_share_times_original_total": true,
+  "source_trace_rows": 60,
+  "coefficient_inspection_rows": 72,
+  "footprints": [
+    {
+      "scenario": "baseline",
+      "region": "EU-12",
+      "ghg_tco2eq_per_tonne_steel": 1.10278018493807
+    },
+    {
+      "scenario": "baseline",
+      "region": "EU-15",
+      "ghg_tco2eq_per_tonne_steel": 1.371111860727083
+    },
+    {
+      "scenario": "NDC_LTT_CBAM_2030_both",
+      "region": "EU-12",
+      "ghg_tco2eq_per_tonne_steel": 0.5653313247921843
+    },
+    {
+      "scenario": "NDC_LTT_CBAM_2030_both",
+      "region": "EU-15",
+      "ghg_tco2eq_per_tonne_steel": 0.5298602112244472
+    }
+  ],
+  "elapsed_seconds": 13.52
+}

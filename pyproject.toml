@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gcam-mario"
+version = "0.1.0.dev0"
+description = "Trace GCAM scenario outputs into explicit MARIO supply-use shocks"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = ["numpy==2.1.1", "pandas==3.0.2", "pyarrow>=19", "openpyxl==3.1.5", "matplotlib>=3.9"]
+
+[project.scripts]
+gcam-mario = "gcam_mario.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gcam_mario"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"config" = "gcam_mario/resources/config"
+"examples/gcam-output" = "gcam_mario/resources/examples/gcam-output"
+"support/gcam_data/Steel_mixes.xlsx" = "gcam_mario/resources/support/gcam_data/Steel_mixes.xlsx"
+"support/aggregations/aggr_to_EU12-EU15.xlsx" = "gcam_mario/resources/support/aggregations/aggr_to_EU12-EU15.xlsx"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
